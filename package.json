@@ -1,0 +1,31 @@
+{
+  "name": "co-middleware",
+  "version": "0.1.0",
+  "description": "Middleware registering/running methods based using co",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rschmukler/co-middleware"
+  },
+  "keywords": [
+    "co",
+    "middleware",
+    "generators",
+    "ecma6"
+  ],
+  "author": "Ryan Schmukler <ryan@slingingcode.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rschmukler/co-middleware/issues"
+  },
+  "homepage": "https://github.com/rschmukler/co-middleware",
+  "devDependencies": {
+    "mocha": "~1.17.1"
+  }
+}
