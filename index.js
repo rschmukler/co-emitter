@@ -1,7 +1,7 @@
 /* jshint esnext: true, noyield: true */
 var co = require('co');
 
-function CoMiddleware(obj) {
+function Middleware(obj) {
   this._middlewares = {};
   if(obj) mixin(obj);
 }
@@ -15,9 +15,9 @@ function CoMiddleware(obj) {
  */
 
 function mixin(obj) {
-  CoMiddleware.call(obj);
-  for(var key in CoMiddleware.prototype) {
-    obj[key] = CoMiddleware.prototype[key];
+  Middleware.call(obj);
+  for(var key in Middleware.prototype) {
+    obj[key] = Middleware.prototype[key];
   }
 }
 
@@ -26,23 +26,24 @@ function mixin(obj) {
  *
  * @param {String} name
  * @param {Function*} generator
- * @return {CoMiddleware}
+ * @return {Middleware}
  * @api public
  */
 
-CoMiddleware.prototype.middleware = function() {
+Middleware.prototype.middleware = function() {
   var args = Array.prototype.slice.call(arguments),
       name = args.shift();
 
-  var middlewares = this._middlewares[name] = this._middlewares[name] || [];
+  var middlewares = this.middlewares(name);
 
   if(Array.isArray(args[0])) {
-    middlewares = this._middlewares[name] = middlewares.concat(args[0]);
+    middlewares = middlewares.concat(args[0]);
   } else if(args.length > 1) {
-    middlewares = this._middlewares[name] = middlewares.concat(args);
+    middlewares = middlewares.concat(args);
   } else {
     middlewares.push(args[0]);
   }
+  this._middlewares[name] = middlewares;
   return this;
 };
 
@@ -52,15 +53,15 @@ CoMiddleware.prototype.middleware = function() {
  *
  * @param {String} name
  * @param {[args]} arguments
- * @return {CoMiddleware}
+ * @return {Middleware}
  * @api public
  */
 
-CoMiddleware.prototype.run = function() {
+Middleware.prototype.run = function() {
   var args = Array.prototype.slice.call(arguments),
       name = args.shift(),
       self = this,
-      middlewares = this._middlewares[name];
+      middlewares = this.middlewares(name);
 
   return co(function *() {
     for(var i = 0; i < middlewares.length; ++i) {
@@ -84,7 +85,7 @@ CoMiddleware.prototype.run = function() {
  * @api public
  */
 
-CoMiddleware.prototype.removeMiddleware = function(name, middleware) {
+Middleware.prototype.removeMiddleware = function(name, middleware) {
   if(!name) {
     this._middlewares = {};
   } else if(!middleware) {
@@ -103,8 +104,8 @@ CoMiddleware.prototype.removeMiddleware = function(name, middleware) {
  * @api public
  */
 
-CoMiddleware.prototype.hasMiddlewares = function(name) {
-  return this._middlewares[name] && this._middlewares[name].length > 0 ? true : false;
+Middleware.prototype.hasMiddlewares = function(name) {
+  return this.middlewares(name).length > 0;
 };
 
 /**
@@ -115,8 +116,8 @@ CoMiddleware.prototype.hasMiddlewares = function(name) {
  * @api public
  */
 
-CoMiddleware.prototype.middlewares = function(name) {
+Middleware.prototype.middlewares = function(name) {
   return this._middlewares[name] ? this._middlewares[name] : [];
 };
 
-module.exports = CoMiddleware;
+module.exports = Middleware;

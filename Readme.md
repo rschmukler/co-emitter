@@ -11,15 +11,15 @@ npm install co-middleware
 ## API
 
 
-### CoMiddleware(obj)
+### Middleware(obj)
 
-The `CoMiddleware` may be used as a mixin or a standalone object.
+The `Middleware` may be used as a mixin or a standalone object.
 
 Standalone:
 
 ```js
-var CoMiddleware = require('co-middleware');
-var middleware = new CoMiddleware();
+var Middleware = require('co-middleware');
+var middleware = new Middleware();
 
 middleware.middleware('say', function *(message) {
   yield delay(200);
@@ -35,7 +35,7 @@ Mixin:
 
 ```js
 var user = { name: 'Tobi' };
-CoMiddleware(user);
+Middleware(user);
 user.run('some middleware');
 ```
 
@@ -46,13 +46,13 @@ var User = function() {
   this.name = 'Tobi';
 };
 
-CoMiddleware(User.prototype);
+Middleware(User.prototype);
 
 var user = new User();
 user.run('some middleware');
 ```
 
-### CoMiddleware#middleware(name, fn\*, [...moreFns\*])
+### Middleware#middleware(name, fn\*, [...moreFns\*])
 
 Registers generator as a middleware for `name`.
 
@@ -61,7 +61,7 @@ Registers generator as a middleware for `name`.
 - an array of multiple generator functions (will be run in the order passed in)
 
 ```js
-var middleware = new CoMiddleware();
+var middleware = new Middleware();
 var middlewareA = function *() {},
     middlewareB = function *() {},
     middlewareC = function *() {};
@@ -81,7 +81,7 @@ middleware.middleware([middlewareA, middlewareB, middlewareC]);
 middleware.middleware(middlewareA, middlewareB, middlewareC);
 ```
 
-### CoMiddleware#run(name, ...args)
+### Middleware#run(name, ...args)
 
 Runs the registered middlewares for `name`. Passes in optional `args` to the middlewares. 
 `args` can be an array, or multiple arguments.
@@ -98,7 +98,7 @@ console.log(result) // 4
 As is implied by the middleware pattern, results from one middleware can be piped into the next. For example:
 
 ```js
-var middleware = new CoMiddleware();
+var middleware = new Middleware();
 
 var uppercase = function *(str) {
   return str.toUpperCase();
@@ -114,7 +114,7 @@ var result = yield middleware.run('upperFirst', 'hello world');
 // result == 'H'
 ```
 
-### CoMiddleware#removeMiddleware([name], [middleware])
+### Middleware#removeMiddleware([name], [middleware])
 
 Removes a given middleware for a specific name.
 
@@ -122,10 +122,10 @@ Removes a given middleware for a specific name.
 - If no `middleware` is provided, all middleware for given `name` will be removed.
 - If `name` and `middleware` provided, removes `middleware` from `name`
 
-### CoMiddleware#hasMiddlewares(name)
+### Middleware#hasMiddlewares(name)
 
 Returns whether or not any middleware exist for `name`.
 
-### CoMiddleware#middlewares(name)
+### Middleware#middlewares(name)
 
 Returns an array of all middleware for a given name. If no middlewares exist, returns an empty array.

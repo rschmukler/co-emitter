@@ -2,12 +2,12 @@
 var expect = require('expect.js'),
     co = require('co');
 
-var CoMiddleware = require('..');
+var Middleware = require('..');
 
-describe('CoMiddleware', function() {
+describe('Middleware', function() {
   describe('instantiation', function() {
     it('initializes _middlewares', function() {
-      var middleware = new CoMiddleware();
+      var middleware = new Middleware();
       expect(middleware._middlewares).to.be.an(Object);
     });
   });
@@ -15,7 +15,7 @@ describe('CoMiddleware', function() {
   describe('#middleware', function() {
     var middleware;
     beforeEach(function() {
-      middleware = new CoMiddleware();
+      middleware = new Middleware();
     });
 
     it('registers the middleware', function() {
@@ -83,7 +83,7 @@ describe('CoMiddleware', function() {
         expect(thirdCalled).to.be(false);
         thirdCalled = true;
       };
-      var middleware = new CoMiddleware();
+      var middleware = new Middleware();
       middleware.middleware('helloWorld', [first, second, third]);
 
       yield middleware.run('helloWorld');
@@ -110,7 +110,7 @@ describe('CoMiddleware', function() {
         return 'yay';
       };
 
-      var middleware = new CoMiddleware();
+      var middleware = new Middleware();
       middleware.middleware('test', [first, second, third]);
       var result = yield middleware.run('test', 'a', 'b');
       expect(result).to.be('yay');
@@ -121,7 +121,7 @@ describe('CoMiddleware', function() {
     var middleware, first, second;
 
     beforeEach(function() {
-      middleware = new CoMiddleware();
+      middleware = new Middleware();
       first = function *() {};
       second = function *() {};
       middleware.middleware('test', first, second);
@@ -149,27 +149,27 @@ describe('CoMiddleware', function() {
 
   describe('#hasMiddlewares', function() {
     it('returns true if there is a middleware registered for the event name', function() {
-      var middleware = new CoMiddleware();
+      var middleware = new Middleware();
       middleware.middleware('test', function *() {});
       expect(middleware.hasMiddlewares('test')).to.be(true);
     });
 
     it('returns false if there is no middleware registered for the event name', function() {
-      var middleware = new CoMiddleware();
+      var middleware = new Middleware();
       expect(middleware.hasMiddlewares('test')).to.be(false);
     });
   });
 
   describe('#middlewares', function() {
     it('returns all registered middlewares for a name', function() {
-      var middlewares = new CoMiddleware();
+      var middlewares = new Middleware();
       var gen = function *() {};
       middlewares.middleware('test', gen);
       expect(middlewares.middlewares('test')).to.be.eql([gen]);
     });
 
     it('returns an empty array if no middlewares', function() {
-      var middlewares = new CoMiddleware();
+      var middlewares = new Middleware();
       expect(middlewares.middlewares('test')).to.be.eql([]);
     });
   });
@@ -178,7 +178,7 @@ describe('CoMiddleware', function() {
   describe('mixin', function() {
     it('works', function() {
       var proto = {};
-      CoMiddleware(proto);
+      Middleware(proto);
       expect(proto._middlewares).to.be.an(Object);
       expect(proto.middleware).to.be.a(Function);
       expect(proto.run).to.be.a(Function);
