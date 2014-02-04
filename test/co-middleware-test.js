@@ -1,4 +1,4 @@
-/* jshint esnext: true, noyield: true */
+/* jshint esnext: true, noyield: true, newcap: false */
 var expect = require('expect.js'),
     co = require('co');
 
@@ -63,21 +63,21 @@ describe('CoMiddleware', function() {
   });
 
   describe('run', function() {
-    it('runs the middlewares in the order registered', co(function* () {
+    it('runs the middlewares in the order registered', co(function *() {
       var firstCalled = false, secondCalled = false, thirdCalled = false;
-      var first = function* () {
+      var first = function *() {
         expect(firstCalled).to.be(false);
         expect(secondCalled).to.be(false);
         expect(thirdCalled).to.be(false);
         firstCalled = true;
       };
-      var second = function* () {
+      var second = function *() {
         expect(firstCalled).to.be(true);
         expect(secondCalled).to.be(false);
         expect(thirdCalled).to.be(false);
         secondCalled = true;
       };
-      var third = function* () {
+      var third = function *() {
         expect(firstCalled).to.be(true);
         expect(secondCalled).to.be(true);
         expect(thirdCalled).to.be(false);
@@ -93,7 +93,7 @@ describe('CoMiddleware', function() {
       expect(thirdCalled).to.be(true);
     }));
 
-    it('waterfalls the results', co(function* () {
+    it('waterfalls the results', co(function *() {
       var first = function *(a, b) {
         expect(a).to.be('a');
         expect(b).to.be('b');
@@ -116,6 +116,64 @@ describe('CoMiddleware', function() {
       expect(result).to.be('yay');
     }));
   });
+
+  describe('#removeMiddleware', function() {
+    var middleware, first, second;
+
+    beforeEach(function() {
+      middleware = new CoMiddleware();
+      first = function *() {};
+      second = function *() {};
+      middleware.middleware('test', first, second);
+      middleware.middleware('anotherTest', first);
+    });
+
+    it('removes all midlewares if no name provided', function() {
+      middleware.removeMiddleware();
+      expect(middleware._middlewares).to.eql({});
+    });
+    it('removes all middlewares if name provided', function() {
+      middleware.removeMiddleware('test');
+      expect(middleware._middlewares).to.eql({
+        anotherTest: [first]
+      });
+    });
+    it('removes specific middleware if name and generator provided', function() {
+      middleware.removeMiddleware('test', second);
+      expect(middleware._middlewares).to.eql({
+        test: [first],
+        anotherTest: [first]
+      });
+    });
+  });
+
+  describe('#hasMiddlewares', function() {
+    it('returns true if there is a middleware registered for the event name', function() {
+      var middleware = new CoMiddleware();
+      middleware.middleware('test', function *() {});
+      expect(middleware.hasMiddlewares('test')).to.be(true);
+    });
+
+    it('returns false if there is no middleware registered for the event name', function() {
+      var middleware = new CoMiddleware();
+      expect(middleware.hasMiddlewares('test')).to.be(false);
+    });
+  });
+
+  describe('#middlewares', function() {
+    it('returns all registered middlewares for a name', function() {
+      var middlewares = new CoMiddleware();
+      var gen = function *() {};
+      middlewares.middleware('test', gen);
+      expect(middlewares.middlewares('test')).to.be.eql([gen]);
+    });
+
+    it('returns an empty array if no middlewares', function() {
+      var middlewares = new CoMiddleware();
+      expect(middlewares.middlewares('test')).to.be.eql([]);
+    });
+  });
+
 
   describe('mixin', function() {
     it('works', function() {

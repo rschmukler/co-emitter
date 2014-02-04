@@ -13,6 +13,7 @@ function CoMiddleware(obj) {
  * @return undefined
  * @api private
  */
+
 function mixin(obj) {
   CoMiddleware.call(obj);
   for(var key in CoMiddleware.prototype) {
@@ -73,5 +74,49 @@ CoMiddleware.prototype.run = function() {
   });
 };
 
+
+/**
+ * Removes middlewares
+ *
+ * @param {String} name
+ * @param {Function*} middleware
+ * @return {undefined}
+ * @api public
+ */
+
+CoMiddleware.prototype.removeMiddleware = function(name, middleware) {
+  if(!name) {
+    this._middlewares = {};
+  } else if(!middleware) {
+    delete this._middlewares[name];
+  } else {
+    var index = this._middlewares[name].indexOf(middleware);
+    if(~index) this._middlewares[name].splice(index, 1);
+  }
+};
+
+/**
+ * Checks whether a middleware for a given name exists
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+CoMiddleware.prototype.hasMiddlewares = function(name) {
+  return this._middlewares[name] && this._middlewares[name].length > 0 ? true : false;
+};
+
+/**
+ * Returns an array of all middlewares for a given name
+ *
+ * @param {String} name
+ * @return {Array}
+ * @api public
+ */
+
+CoMiddleware.prototype.middlewares = function(name) {
+  return this._middlewares[name] ? this._middlewares[name] : [];
+};
 
 module.exports = CoMiddleware;
