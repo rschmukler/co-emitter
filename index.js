@@ -66,12 +66,12 @@ Middleware.prototype.run = function() {
   return co(function *() {
     for(var i = 0; i < middlewares.length; ++i) {
       if(Array.isArray(args)) {
-        args = yield middlewares[i].apply(self, args);
+        args = (yield middlewares[i].apply(self, args)) || args;
       } else {
-        args = yield middlewares[i].call(self, args);
+        args = (yield middlewares[i].call(self, args)) || args;
       }
     }
-    return args;
+    return args.length == 1 ? args[0] : args;
   });
 };
 

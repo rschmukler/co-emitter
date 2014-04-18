@@ -115,6 +115,22 @@ describe('Middleware', function() {
       var result = yield middleware.run('test', 'a', 'b');
       expect(result).to.be('yay');
     }));
+
+    it('allows for middlewares that dont return anything', co(function *() {
+      var middleware = new Middleware();
+      middleware.middleware('test', function* () { });
+      var result = yield middleware.run('test', 1, 2, 3);
+      expect(result).to.eql([1, 2, 3]);
+    }));
+
+    it('returns the args if no middleware exists', co(function *() {
+      var middleware = new Middleware();
+      var result = yield middleware.run('bogus', 'a', 'b');
+      expect(result[0]).to.be('a');
+      expect(result[1]).to.be('b');
+      result = yield middleware.run('bogus', 'a');
+      expect(result).to.be('a');
+    }));
   });
 
   describe('#removeMiddleware', function() {
