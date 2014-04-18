@@ -116,6 +116,8 @@ var result = yield middleware.run('upperFirst', 'hello world');
 // result == 'H'
 ```
 
+If you do not return a value, it will use the initial arguments passed in.
+
 ### Middleware#removeMiddleware([name], [middleware])
 
 Removes a given middleware for a specific name.
