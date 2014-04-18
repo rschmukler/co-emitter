@@ -27,7 +27,9 @@ middleware.middleware('say', function *(message) {
   return true;
 });
 
-var result = yield middleware.run('say', 'hello')
+co(function *() {
+  var result = yield middleware.run('say', 'hello')
+});
 // result == true, and console.logs "I say: hello""
 ```
 

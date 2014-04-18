@@ -1,6 +1,4 @@
 /* jshint esnext: true, noyield: true */
-var co = require('co');
-
 function Middleware(obj) {
   this._middlewares = {};
   if(obj) mixin(obj);
@@ -57,22 +55,20 @@ Middleware.prototype.middleware = function() {
  * @api public
  */
 
-Middleware.prototype.run = function() {
+Middleware.prototype.run = function *() {
   var args = Array.prototype.slice.call(arguments),
       name = args.shift(),
       self = this,
       middlewares = this.middlewares(name);
 
-  return co(function *() {
-    for(var i = 0; i < middlewares.length; ++i) {
-      if(Array.isArray(args)) {
-        args = (yield middlewares[i].apply(self, args)) || args;
-      } else {
-        args = (yield middlewares[i].call(self, args)) || args;
-      }
+  for(var i = 0; i < middlewares.length; ++i) {
+    if(Array.isArray(args)) {
+      args = (yield middlewares[i].apply(self, args)) || args;
+    } else {
+      args = (yield middlewares[i].call(self, args)) || args;
     }
-    return args.length == 1 ? args[0] : args;
-  });
+  }
+  return args.length == 1 ? args[0] : args;
 };
 
 

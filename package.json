@@ -28,8 +28,5 @@
   "devDependencies": {
     "mocha": "~1.17.1",
     "expect.js": "~0.2.0"
-  },
-  "dependencies": {
-    "co": "~3.0.2"
   }
 }
