@@ -18,7 +18,7 @@ The `Emitter` may be used as a mixin or a standalone object.
 Standalone:
 
 ```js
-var Emitter = require('co-middleware');
+var Emitter = require('co-emitter');
 var emitter = new Emitter();
 
 emitter.on('say', function *(message) {
@@ -38,7 +38,7 @@ Mixin:
 ```js
 var user = { name: 'Tobi' };
 Emitter(user);
-user.emit('some middleware');
+user.emit('some event');
 ```
 
 Prototype mixin:
@@ -51,12 +51,12 @@ var User = function() {
 Emitter(User.prototype);
 
 var user = new User();
-yield user.emit('some middleware');
+yield user.emit('some event');
 ```
 
-### Emitter#middleware(name, fn\*, [...moreFns\*])
+### Emitter#on(name, fn\*, [...moreFns\*])
 
-Registers generator as a middleware for `name`.
+Registers generator as a listener for `name`.
 
 `fn*` can be:
 - a generator function
