@@ -1,11 +1,11 @@
 /* jshint esnext: true, noyield: true */
-function Middleware(obj) {
-  this._middlewares = {};
+function Emitter(obj) {
+  this._callbacks = {};
   if(obj) mixin(obj);
 }
 
 /**
- * Mixes the co-middleware into the object
+ * Mixes the co-emitter into the object
  *
  * @param {Object} obj
  * @return undefined
@@ -13,59 +13,58 @@ function Middleware(obj) {
  */
 
 function mixin(obj) {
-  Middleware.call(obj);
-  for(var key in Middleware.prototype) {
-    obj[key] = Middleware.prototype[key];
+  Emitter.call(obj);
+  for(var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
   }
 }
 
 /**
- * Register a generator for the given middleware name
+ * Register a generator for the given event
  *
- * @param {String} name
+ * @param {String} event
  * @param {Function*} generator
- * @return {Middleware}
+ * @return {Emitter}
  * @api public
  */
 
-Middleware.prototype.middleware = function() {
+Emitter.prototype.on = function() {
   var args = Array.prototype.slice.call(arguments),
-      name = args.shift();
+      event = args.shift();
 
-  var middlewares = this.middlewares(name);
+  var listeners = this.listeners(event);
 
   if(Array.isArray(args[0])) {
-    middlewares = middlewares.concat(args[0]);
+    listeners = listeners.concat(args[0]);
   } else if(args.length > 1) {
-    middlewares = middlewares.concat(args);
+    listeners = listeners.concat(args);
   } else {
-    middlewares.push(args[0]);
+    listeners.push(args[0]);
   }
-  this._middlewares[name] = middlewares;
+  this._callbacks[event] = listeners;
   return this;
 };
 
 
 /**
- * Runs all of the middlewares for a given name
+ * Runs all of the listeners for a given event
  *
- * @param {String} name
+ * @param {String} event
  * @param {[args]} arguments
- * @return {Middleware}
+ * @return {Emitter}
  * @api public
  */
 
-Middleware.prototype.run = function *() {
+Emitter.prototype.emit = function *() {
   var args = Array.prototype.slice.call(arguments),
-      name = args.shift(),
-      self = this,
-      middlewares = this.middlewares(name);
+      event = args.shift(),
+      listeners = this.listeners(event);
 
-  for(var i = 0; i < middlewares.length; ++i) {
+  for(var i = 0; i < listeners.length; ++i) {
     if(Array.isArray(args)) {
-      args = (yield middlewares[i].apply(self, args)) || args;
+      args = (yield listeners[i].apply(this, args)) || args;
     } else {
-      args = (yield middlewares[i].call(self, args)) || args;
+      args = (yield listeners[i].call(this, args)) || args;
     }
   }
   return args.length == 1 ? args[0] : args;
@@ -73,47 +72,47 @@ Middleware.prototype.run = function *() {
 
 
 /**
- * Removes middlewares
+ * Removes Listener
  *
- * @param {String} name
- * @param {Function*} middleware
+ * @param {String} event
+ * @param {Function*} listener
  * @return {undefined}
  * @api public
  */
 
-Middleware.prototype.removeMiddleware = function(name, middleware) {
-  if(!name) {
-    this._middlewares = {};
-  } else if(!middleware) {
-    delete this._middlewares[name];
+Emitter.prototype.off = function(event, listener) {
+  if(!event) {
+    this._callbacks = {};
+  } else if(!listener) {
+    delete this._callbacks[event];
   } else {
-    var index = this._middlewares[name].indexOf(middleware);
-    if(~index) this._middlewares[name].splice(index, 1);
+    var index = this._callbacks[event].indexOf(listener);
+    if(~index) this._callbacks[event].splice(index, 1);
   }
 };
 
 /**
- * Checks whether a middleware for a given name exists
+ * Checks whether a listener exists for a given event
  *
- * @param {String} name
+ * @param {String} event
  * @return {Boolean}
  * @api public
  */
 
-Middleware.prototype.hasMiddlewares = function(name) {
-  return this.middlewares(name).length > 0;
+Emitter.prototype.hasListeners = function(event) {
+  return this.listeners(event).length > 0;
 };
 
 /**
- * Returns an array of all middlewares for a given name
+ * Returns an array of all listeners for a given event
  *
- * @param {String} name
+ * @param {String} event
  * @return {Array}
  * @api public
  */
 
-Middleware.prototype.middlewares = function(name) {
-  return this._middlewares[name] ? this._middlewares[name] : [];
+Emitter.prototype.listeners = function(event) {
+  return this._callbacks[event] ? this._callbacks[event] : [];
 };
 
-module.exports = Middleware;
+module.exports = Emitter;
