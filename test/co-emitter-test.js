@@ -62,6 +62,18 @@ describe('Emitter', function() {
     });
   });
 
+  describe('once', function() {
+    it('attaches a listener and removes it', co(function*() {
+      var emitter = new Emitter();
+      var count = 0;
+      var gen = function *() { count++; };
+      emitter.once('test', gen);
+      yield emitter.emit('test');
+      yield emitter.emit('test');
+      expect(count).to.be(1);
+    }));
+  });
+
   describe('emit', function() {
     it('runs the listeners in the order registered', co(function *() {
       var firstCalled = false, secondCalled = false, thirdCalled = false;

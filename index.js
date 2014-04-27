@@ -45,6 +45,24 @@ Emitter.prototype.on = function() {
   return this;
 };
 
+/**
+ * Register a generator for the given event that runs just once
+ *
+ * @param {String} event
+ * @param {Function*} generator
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, listener) {
+  var self = this;
+  var remover = function*() {
+    yield listener();
+    self.off(event, remover);
+  };
+  this.on(event, remover);
+};
+
 
 /**
  * Runs all of the listeners for a given event
