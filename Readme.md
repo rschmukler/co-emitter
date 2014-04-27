@@ -83,6 +83,18 @@ emitter.on('test', [listenerA, listenerB, listenerC]);
 emitter.on('test', listenerA, listenerB, listenerC);
 ```
 
+### Emitter#once(name, fn\*, [...moreFns\*])
+
+Registers generator as a listener for `name`. This generator runs once and is
+then removed.
+
+```js
+var emitter = new Emitter();
+emitter.once('test', function*() { console.log("Yay!"); });
+yield emitter.emit('test');
+```
+
+
 ### Emitter#emit(event, ...args)
 
 Runs the registered listeners for `event`. Passes in optional `args` to the
