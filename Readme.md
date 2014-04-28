@@ -38,7 +38,7 @@ Mixin:
 ```js
 var user = { name: 'Tobi' };
 Emitter(user);
-user.emit('some event');
+yield user.emit('some event');
 ```
 
 Prototype mixin:
@@ -97,6 +97,54 @@ original arguments.
 var result = yield emitter.emit('add', 2, 2);
 console.log(result) // 4
 ```
+
+##### Async and Sync Sync Events
+
+If you want an event to be synchronous, and not have to `yield` to
+`emitter.emit`, you can do so by using normal functions for your listeners.
+
+```js
+var callCount = 0;
+emitter.on('call', function() {
+  callCount++;
+});
+
+emitter.emit('call');
+emitter.emit('call');
+```
+
+If you wan't to wait for async operations to have finished, you may do so by
+using `yield` within generators.
+
+```js
+emitter.on('saving', function *() {
+  userStatistics.saveCount += 1;
+  yield userStatistics.save();
+});
+
+// Elsewhere...
+yield emitter.emit('saving'); // wait for `saving`'s async to have finished.
+```
+
+You may not use both generators and normal functions as listeners for a single
+event. If you need async and sync for a single event, use a non-yielding
+generator for the sync.
+
+```js
+emitter.on('saving', function*() {
+  userStatistics.saveCount += 1;
+});
+
+emitter.on('saving', function *() {
+  yield userStatistics.save();
+});
+
+// Elsewhere...
+yield emitter.emit('saving'); // wait for `saving`'s async to have finished.
+```
+
+Because we are using one async function (or a generator), we must use `yield`
+when calling `emit`.
 
 ##### Emitter chaining
 
