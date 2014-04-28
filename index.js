@@ -1,6 +1,7 @@
 /* jshint esnext: true, noyield: true */
 function Emitter(obj) {
-  this._callbacks = {};
+  this._listeners = {};
+  this._styles = {};
   if(obj) mixin(obj);
 }
 
@@ -32,16 +33,27 @@ Emitter.prototype.on = function() {
   var args = Array.prototype.slice.call(arguments),
       event = args.shift();
 
-  var listeners = this.listeners(event);
+  var listeners = this._listeners[event] || [],
+      add = function(listener) { this.on(event, listener); }.bind(this);
+
+  this._listeners[event] = listeners;
 
   if(Array.isArray(args[0])) {
-    listeners = listeners.concat(args[0]);
+    args[0].forEach(add);
   } else if(args.length > 1) {
-    listeners = listeners.concat(args);
+    args.forEach(add);
   } else {
-    listeners.push(args[0]);
+    var listener = args[0],
+        existingStyle = this._styles[event],
+        style = this._styles[event] = isGenerator(listener) ? 'generator' : 'function';
+
+    if(existingStyle && style !== existingStyle) {
+      throw new Error('Cannot mix generator and function listeners');
+    } else {
+      this._styles[event] = style;
+      listeners.push(listener);
+    }
   }
-  this._callbacks[event] = listeners;
   return this;
 };
 
@@ -55,19 +67,29 @@ Emitter.prototype.on = function() {
  * @api public
  */
 
-Emitter.prototype.emit = function *() {
+Emitter.prototype.emit = function() {
   var args = Array.prototype.slice.call(arguments),
       event = args.shift(),
-      listeners = this.listeners(event);
+      listeners = this.listeners(event),
+      style = this._styles[event];
 
-  for(var i = 0; i < listeners.length; ++i) {
-    if(Array.isArray(args)) {
-      args = (yield listeners[i].apply(this, args)) || args;
-    } else {
-      args = (yield listeners[i].call(this, args)) || args;
+  if(style == 'function') {
+    for(var i = 0; i < listeners.length; ++i) {
+        listeners[i].apply(this, args);
     }
+    return undefined;
+  } else {
+    return function*() {
+      for(var i = 0; i < listeners.length; ++i) {
+        if(Array.isArray(args)) {
+          args = (yield listeners[i].apply(this, args)) || args;
+        } else {
+          args = (yield listeners[i].call(this, args)) || args;
+        }
+      }
+      return args.length == 1 ? args[0] : args;
+    }.call(this);
   }
-  return args.length == 1 ? args[0] : args;
 };
 
 
@@ -82,12 +104,14 @@ Emitter.prototype.emit = function *() {
 
 Emitter.prototype.off = function(event, listener) {
   if(!event) {
-    this._callbacks = {};
+    this._listeners = {};
+    this._styles = {};
   } else if(!listener) {
-    delete this._callbacks[event];
+    delete this._listeners[event];
+    delete this._styles[event];
   } else {
-    var index = this._callbacks[event].indexOf(listener);
-    if(~index) this._callbacks[event].splice(index, 1);
+    var index = this._listeners[event].indexOf(listener);
+    if(~index) this._listeners[event].splice(index, 1);
   }
 };
 
@@ -112,7 +136,11 @@ Emitter.prototype.hasListeners = function(event) {
  */
 
 Emitter.prototype.listeners = function(event) {
-  return this._callbacks[event] ? this._callbacks[event] : [];
+  return this._listeners[event] ? this._listeners[event] : [];
 };
 
 module.exports = Emitter;
+
+function isGenerator(fn) {
+  return /^function\s*\*/.test(fn.toString());
+};

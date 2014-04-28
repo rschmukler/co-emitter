@@ -6,9 +6,10 @@ var Emitter = require('..');
 
 describe('Emitter', function() {
   describe('instantiation', function() {
-    it('initializes _callbacks', function() {
+    it('initializes _listeners', function() {
       var emitter = new Emitter();
-      expect(emitter._callbacks).to.be.an(Object);
+      expect(emitter._listeners).to.be.an(Object);
+      expect(emitter._styles).to.be.an(Object);
     });
   });
 
@@ -21,9 +22,30 @@ describe('Emitter', function() {
     it('registers the listener', function() {
       var gen = function *() {};
       emitter.on('helloWorld', gen);
-      expect(emitter._callbacks).to.have.property('helloWorld');
-      expect(emitter._callbacks.helloWorld).to.have.length(1);
-      expect(emitter._callbacks.helloWorld[0]).to.be(gen);
+      expect(emitter._listeners).to.have.property('helloWorld');
+      expect(emitter._listeners.helloWorld).to.have.length(1);
+      expect(emitter._listeners.helloWorld[0]).to.be(gen);
+    });
+
+    it('sets style of event', function*() {
+      emitter.on('fn', function() { } );
+      expect(emitter._styles.fn).to.be('function');
+
+      emitter.on('gen', function*() { } );
+      expect(emitter._styles.gen).to.be('generator');
+    });
+
+  it('throws an error with conflicting styles', function() { 
+      var gen = function*() {},
+          fn = function() {};
+
+
+      expect(conflictStyles).to.throwError('Cannot mix generator and function listeners');
+
+      function conflictStyles() {
+        emitter.on('woo', gen);
+        emitter.on('woo', fn);
+      }
     });
 
     it('can take an array', function() {
@@ -31,8 +53,8 @@ describe('Emitter', function() {
           genB = function *() {};
 
       emitter.on('helloWorld', [gen, genB]);
-      expect(emitter._callbacks).to.have.property('helloWorld');
-      expect(emitter._callbacks.helloWorld).to.have.length(2);
+      expect(emitter._listeners).to.have.property('helloWorld');
+      expect(emitter._listeners.helloWorld).to.have.length(2);
     });
 
     it('can take multiple listeners', function() {
@@ -40,8 +62,8 @@ describe('Emitter', function() {
           genB = function *() {};
 
       emitter.on('helloWorld', gen, genB);
-      expect(emitter._callbacks).to.have.property('helloWorld');
-      expect(emitter._callbacks.helloWorld).to.have.length(2);
+      expect(emitter._listeners).to.have.property('helloWorld');
+      expect(emitter._listeners.helloWorld).to.have.length(2);
     });
 
     it('appends listeners', function() {
@@ -49,10 +71,10 @@ describe('Emitter', function() {
           genB = function *() {};
       emitter.on('helloWorld', gen);
       emitter.on('helloWorld', genB);
-      expect(emitter._callbacks).to.have.property('helloWorld');
-      expect(emitter._callbacks.helloWorld).to.have.length(2);
-      expect(emitter._callbacks.helloWorld[0]).to.not.be(genB);
-      expect(emitter._callbacks.helloWorld[1]).to.be(genB);
+      expect(emitter._listeners).to.have.property('helloWorld');
+      expect(emitter._listeners.helloWorld).to.have.length(2);
+      expect(emitter._listeners.helloWorld[0]).to.not.be(genB);
+      expect(emitter._listeners.helloWorld[1]).to.be(genB);
     });
 
     it('returns the co-listener', function() {
@@ -63,74 +85,86 @@ describe('Emitter', function() {
   });
 
   describe('emit', function() {
-    it('runs the listeners in the order registered', co(function *() {
-      var firstCalled = false, secondCalled = false, thirdCalled = false;
-      var first = function *() {
-        expect(firstCalled).to.be(false);
-        expect(secondCalled).to.be(false);
-        expect(thirdCalled).to.be(false);
-        firstCalled = true;
-      };
-      var second = function *() {
-        expect(firstCalled).to.be(true);
-        expect(secondCalled).to.be(false);
-        expect(thirdCalled).to.be(false);
-        secondCalled = true;
-      };
-      var third = function *() {
+    describe('with functions', function() {
+      it('emits the event on the listeners', function(done) {
+        var emitter = new Emitter();
+        emitter.on('test', function(val) {
+          expect(val).to.be(1);
+          done();
+        });
+        emitter.emit('test', 1);
+      });
+    });
+    describe('with generators', function() {
+      it('runs the listeners in the order registered', co(function *() {
+        var firstCalled = false, secondCalled = false, thirdCalled = false;
+        var first = function *() {
+          expect(firstCalled).to.be(false);
+          expect(secondCalled).to.be(false);
+          expect(thirdCalled).to.be(false);
+          firstCalled = true;
+        };
+        var second = function *() {
+          expect(firstCalled).to.be(true);
+          expect(secondCalled).to.be(false);
+          expect(thirdCalled).to.be(false);
+          secondCalled = true;
+        };
+        var third = function *() {
+          expect(firstCalled).to.be(true);
+          expect(secondCalled).to.be(true);
+          expect(thirdCalled).to.be(false);
+          thirdCalled = true;
+        };
+        var emitter = new Emitter();
+        emitter.on('helloWorld', [first, second, third]);
+
+        yield emitter.emit('helloWorld');
+
         expect(firstCalled).to.be(true);
         expect(secondCalled).to.be(true);
-        expect(thirdCalled).to.be(false);
-        thirdCalled = true;
-      };
-      var emitter = new Emitter();
-      emitter.on('helloWorld', [first, second, third]);
+        expect(thirdCalled).to.be(true);
+      }));
 
-      yield emitter.emit('helloWorld');
+      it('waterfalls the results', co(function *() {
+        var first = function *(a, b) {
+          expect(a).to.be('a');
+          expect(b).to.be('b');
+          return [1, 2];
+        };
+        var second = function *(a, b) {
+          expect(a).to.be(1);
+          expect(b).to.be(2);
+          return 'woo';
+        };
 
-      expect(firstCalled).to.be(true);
-      expect(secondCalled).to.be(true);
-      expect(thirdCalled).to.be(true);
-    }));
+        var third = function *(a) {
+          expect(a).to.be('woo');
+          return 'yay';
+        };
 
-    it('waterfalls the results', co(function *() {
-      var first = function *(a, b) {
-        expect(a).to.be('a');
-        expect(b).to.be('b');
-        return [1, 2];
-      };
-      var second = function *(a, b) {
-        expect(a).to.be(1);
-        expect(b).to.be(2);
-        return 'woo';
-      };
+        var emitter = new Emitter();
+        emitter.on('test', [first, second, third]);
+        var result = yield emitter.emit('test', 'a', 'b');
+        expect(result).to.be('yay');
+      }));
 
-      var third = function *(a) {
-        expect(a).to.be('woo');
-        return 'yay';
-      };
+      it('allows for listeners that dont return anything', co(function *() {
+        var emitter = new Emitter();
+        emitter.on('test', function* () { });
+        var result = yield emitter.emit('test', 1, 2, 3);
+        expect(result).to.eql([1, 2, 3]);
+      }));
 
-      var emitter = new Emitter();
-      emitter.on('test', [first, second, third]);
-      var result = yield emitter.emit('test', 'a', 'b');
-      expect(result).to.be('yay');
-    }));
-
-    it('allows for listeners that dont return anything', co(function *() {
-      var emitter = new Emitter();
-      emitter.on('test', function* () { });
-      var result = yield emitter.emit('test', 1, 2, 3);
-      expect(result).to.eql([1, 2, 3]);
-    }));
-
-    it('returns the args if no listener exists', co(function *() {
-      var emitter = new Emitter();
-      var result = yield emitter.emit('bogus', 'a', 'b');
-      expect(result[0]).to.be('a');
-      expect(result[1]).to.be('b');
-      result = yield emitter.emit('bogus', 'a');
-      expect(result).to.be('a');
-    }));
+      it('returns the args if no listener exists', co(function *() {
+        var emitter = new Emitter();
+        var result = yield emitter.emit('bogus', 'a', 'b');
+        expect(result[0]).to.be('a');
+        expect(result[1]).to.be('b');
+        result = yield emitter.emit('bogus', 'a');
+        expect(result).to.be('a');
+      }));
+    });
   });
 
   describe('#off', function() {
@@ -146,17 +180,19 @@ describe('Emitter', function() {
 
     it('removes all listeners if no name provided', function() {
       emitter.off();
-      expect(emitter._callbacks).to.eql({});
+      expect(emitter._listeners).to.eql({});
+      expect(emitter._styles.test).to.be(undefined);
     });
     it('removes all listeners of name if name provided', function() {
       emitter.off('test');
-      expect(emitter._callbacks).to.eql({
+      expect(emitter._listeners).to.eql({
         anotherTest: [first]
       });
+      expect(emitter._styles.test).to.be(undefined);
     });
     it('removes specific listener if name and generator provided', function() {
       emitter.off('test', second);
-      expect(emitter._callbacks).to.eql({
+      expect(emitter._listeners).to.eql({
         test: [first],
         anotherTest: [first]
       });
@@ -195,7 +231,7 @@ describe('Emitter', function() {
     it('works', function() {
       var proto = {};
       Emitter(proto);
-      expect(proto._callbacks).to.be.an(Object);
+      expect(proto._listeners).to.be.an(Object);
       expect(proto.on).to.be.a(Function);
       expect(proto.emit).to.be.a(Function);
     });
