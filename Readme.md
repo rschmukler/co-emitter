@@ -190,6 +190,11 @@ Removes a given listener for a specific listener.
 - If no `listener` is provided, all listeners for given `event` will be removed.
 - If `event` and `listener` provided, removes `listener` from `event`
 
+### Emitter#removeAllListeners
+
+Convenience method to call off with no `event` or `listener`, thereby removing
+all listeners.
+
 ### Emitter#hasListeners(event)
 
 Returns whether or not any listeners exist for `event`.
