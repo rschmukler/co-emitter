@@ -179,6 +179,7 @@ describe('Emitter', function() {
     });
   });
 
+
   describe('#off', function() {
     var emitter, first, second;
 
@@ -208,6 +209,19 @@ describe('Emitter', function() {
         test: [first],
         anotherTest: [first]
       });
+    });
+  });
+
+  describe('#removeAllListeners', function() {
+    it('is a shortcut for off', function() {
+      var emitter = new Emitter(), 
+          called = false;
+
+      emitter.off = function() {
+        called = true;
+      };
+      emitter.removeAllListeners();
+      expect(called).to.be(true);
     });
   });
 

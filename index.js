@@ -134,6 +134,17 @@ Emitter.prototype.off = function(event, listener) {
 };
 
 /**
+ * Removes All listeners
+ *
+ * @return {undefined}
+ * @api public
+ */
+
+Emitter.prototype.removeAllListeners = function() {
+  this.off();
+};
+
+/**
  * Checks whether a listener exists for a given event
  *
  * @param {String} event
