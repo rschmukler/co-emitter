@@ -182,7 +182,7 @@ var result = yield emitter.emit('upperFirst', 'hello world');
 If you do not return a value, it will use the initial arguments passed in/ the
 value of the last returning listener.
 
-### Emitter#removeListener([event], [listener])
+### Emitter#off([event], [listener])
 
 Removes a given listener for a specific listener.
 
