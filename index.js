@@ -67,11 +67,18 @@ Emitter.prototype.on = function() {
  */
 
 Emitter.prototype.once = function(event, listener) {
-  var self = this;
-  var remover = function*() {
-    yield listener();
-    self.off(event, remover);
-  };
+  var self = this, remover;
+  if(isGenerator(listener)) {
+    remover = function*() {
+      yield listener();
+      self.off(event, remover);
+    };
+  } else {
+    remover = function() {
+      listener();
+      self.off(event, remover);
+    };
+  }
   this.on(event, remover);
 };
 

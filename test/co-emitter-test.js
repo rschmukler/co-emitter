@@ -65,9 +65,7 @@ describe('Emitter', function() {
       expect(emitter._listeners).to.have.property('helloWorld');
       expect(emitter._listeners.helloWorld).to.have.length(2);
     });
-
-    it('appends listeners', function() {
-      var gen = function *() {},
+it('appends listeners', function() { var gen = function *() {},
           genB = function *() {};
       emitter.on('helloWorld', gen);
       emitter.on('helloWorld', genB);
@@ -92,6 +90,16 @@ describe('Emitter', function() {
       emitter.once('test', gen);
       yield emitter.emit('test');
       yield emitter.emit('test');
+      expect(count).to.be(1);
+    }));
+
+    it('works for functions', co(function*() {
+      var emitter = new Emitter();
+      var count = 0;
+      var listener = function () { count++; };
+      emitter.once('test', listener);
+      emitter.emit('test');
+      emitter.emit('test');
       expect(count).to.be(1);
     }));
   });
