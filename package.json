@@ -1,6 +1,6 @@
 {
   "name": "co-emitter",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Emitter that works with generator methods using co",
   "main": "index.js",
   "directories": {
