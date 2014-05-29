@@ -86,9 +86,9 @@ it('appends listeners', function() { var gen = function *() {},
     it('attaches a listener and removes it', co(function*() {
       var emitter = new Emitter();
       var count = 0;
-      var gen = function *() { count++; };
+      var gen = function *(arg) { expect(arg).to.be('a'); count++; };
       emitter.once('test', gen);
-      yield emitter.emit('test');
+      yield emitter.emit('test', 'a');
       yield emitter.emit('test');
       expect(count).to.be(1);
     }));
@@ -96,9 +96,9 @@ it('appends listeners', function() { var gen = function *() {},
     it('works for functions', co(function*() {
       var emitter = new Emitter();
       var count = 0;
-      var listener = function () { count++; };
+      var listener = function(arg) { expect(arg).to.be('a'); count++; };
       emitter.once('test', listener);
-      emitter.emit('test');
+      emitter.emit('test', 'a');
       emitter.emit('test');
       expect(count).to.be(1);
     }));

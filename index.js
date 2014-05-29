@@ -70,12 +70,14 @@ Emitter.prototype.once = function(event, listener) {
   var self = this, remover;
   if(isGenerator(listener)) {
     remover = function*() {
-      yield listener();
+      var args = Array.prototype.slice.call(arguments);
+      yield listener.apply(this, args);
       self.off(event, remover);
     };
   } else {
     remover = function() {
-      listener();
+      var args = Array.prototype.slice.call(arguments);
+      listener.apply(this, args);
       self.off(event, remover);
     };
   }
