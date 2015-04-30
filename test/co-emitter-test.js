@@ -35,7 +35,7 @@ describe('Emitter', function() {
       expect(emitter._styles.gen).to.be('generator');
     });
 
-  it('throws an error with conflicting styles', function() { 
+  it('throws an error with conflicting styles', function() {
       var gen = function*() {},
           fn = function() {};
 
@@ -65,10 +65,14 @@ describe('Emitter', function() {
       expect(emitter._listeners).to.have.property('helloWorld');
       expect(emitter._listeners.helloWorld).to.have.length(2);
     });
-it('appends listeners', function() { var gen = function *() {},
+
+    it('appends listeners', function() {
+      var gen = function *() {},
           genB = function *() {};
+
       emitter.on('helloWorld', gen);
       emitter.on('helloWorld', genB);
+
       expect(emitter._listeners).to.have.property('helloWorld');
       expect(emitter._listeners.helloWorld).to.have.length(2);
       expect(emitter._listeners.helloWorld[0]).to.not.be(genB);
@@ -83,7 +87,7 @@ it('appends listeners', function() { var gen = function *() {},
   });
 
   describe('once', function() {
-    it('attaches a listener and removes it', co(function*() {
+    it('attaches a listener and removes it', co.wrap(function*() {
       var emitter = new Emitter();
       var count = 0;
       var gen = function *(arg) { expect(arg).to.be('a'); count++; };
@@ -93,7 +97,7 @@ it('appends listeners', function() { var gen = function *() {},
       expect(count).to.be(1);
     }));
 
-    it('works for functions', co(function*() {
+    it('works for functions', co.wrap(function*() {
       var emitter = new Emitter();
       var count = 0;
       var listener = function(arg) { expect(arg).to.be('a'); count++; };
@@ -116,7 +120,7 @@ it('appends listeners', function() { var gen = function *() {},
       });
     });
     describe('with generators', function() {
-      it('runs the listeners in the order registered', co(function *() {
+      it('runs the listeners in the order registered', co.wrap(function *() {
         var firstCalled = false, secondCalled = false, thirdCalled = false;
         var first = function *() {
           expect(firstCalled).to.be(false);
@@ -146,7 +150,7 @@ it('appends listeners', function() { var gen = function *() {},
         expect(thirdCalled).to.be(true);
       }));
 
-      it('waterfalls the results', co(function *() {
+      it('waterfalls the results', co.wrap(function *() {
         var first = function *(a, b) {
           expect(a).to.be('a');
           expect(b).to.be('b');
@@ -169,14 +173,14 @@ it('appends listeners', function() { var gen = function *() {},
         expect(result).to.be('yay');
       }));
 
-      it('allows for listeners that dont return anything', co(function *() {
+      it('allows for listeners that dont return anything', co.wrap(function *() {
         var emitter = new Emitter();
         emitter.on('test', function* () { });
         var result = yield emitter.emit('test', 1, 2, 3);
         expect(result).to.eql([1, 2, 3]);
       }));
 
-      it('returns the args if no listener exists', co(function *() {
+      it('returns the args if no listener exists', co.wrap(function *() {
         var emitter = new Emitter();
         var result = yield emitter.emit('bogus', 'a', 'b');
         expect(result[0]).to.be('a');
@@ -222,7 +226,7 @@ it('appends listeners', function() { var gen = function *() {},
 
   describe('#removeAllListeners', function() {
     it('is a shortcut for off', function() {
-      var emitter = new Emitter(), 
+      var emitter = new Emitter(),
           called = false;
 
       emitter.off = function() {
