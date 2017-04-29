@@ -1,25 +1,26 @@
 /* jshint esnext: true, noyield: true, newcap: false */
-var expect = require('expect.js'),
-    co = require('co');
+var expect = require('expect.js');
+
+var co = require('co');
 
 var Emitter = require('..');
 
-describe('Emitter', function() {
-  describe('instantiation', function() {
-    it('initializes _listeners', function() {
+describe('Emitter', () => {
+  describe('instantiation', () => {
+    it('initializes _listeners', () => {
       var emitter = new Emitter();
       expect(emitter._listeners).to.be.an(Object);
       expect(emitter._styles).to.be.an(Object);
     });
   });
 
-  describe('#on', function() {
+  describe('#on', () => {
     var emitter;
-    beforeEach(function() {
+    beforeEach(() => {
       emitter = new Emitter();
     });
 
-    it('registers the listener', function() {
+    it('registers the listener', () => {
       var gen = function *() {};
       emitter.on('helloWorld', gen);
       expect(emitter._listeners).to.have.property('helloWorld');
@@ -28,47 +29,47 @@ describe('Emitter', function() {
     });
 
     it('sets style of event', function*() {
-      emitter.on('fn', function() { } );
+      emitter.on('fn', () => { } );
       expect(emitter._styles.fn).to.be('function');
 
       emitter.on('gen', function*() { } );
       expect(emitter._styles.gen).to.be('generator');
     });
 
-  it('throws an error with conflicting styles', function() {
-      var gen = function*() {},
-          fn = function() {};
+  it('throws an error with conflicting styles', () => {
+    var gen = function*() {};
+    var fn = () => {};
 
 
-      expect(conflictStyles).to.throwError('Cannot mix generator and function listeners');
+    expect(conflictStyles).to.throwError('Cannot mix generator and function listeners');
 
-      function conflictStyles() {
-        emitter.on('woo', gen);
-        emitter.on('woo', fn);
-      }
-    });
+    function conflictStyles() {
+      emitter.on('woo', gen);
+      emitter.on('woo', fn);
+    }
+  });
 
-    it('can take an array', function() {
-      var gen = function *() {},
-          genB = function *() {};
+    it('can take an array', () => {
+      var gen = function *() {};
+      var genB = function *() {};
 
       emitter.on('helloWorld', [gen, genB]);
       expect(emitter._listeners).to.have.property('helloWorld');
       expect(emitter._listeners.helloWorld).to.have.length(2);
     });
 
-    it('can take multiple listeners', function() {
-      var gen = function *() {},
-          genB = function *() {};
+    it('can take multiple listeners', () => {
+      var gen = function *() {};
+      var genB = function *() {};
 
       emitter.on('helloWorld', gen, genB);
       expect(emitter._listeners).to.have.property('helloWorld');
       expect(emitter._listeners.helloWorld).to.have.length(2);
     });
 
-    it('appends listeners', function() {
-      var gen = function *() {},
-          genB = function *() {};
+    it('appends listeners', () => {
+      var gen = function *() {};
+      var genB = function *() {};
 
       emitter.on('helloWorld', gen);
       emitter.on('helloWorld', genB);
@@ -79,14 +80,14 @@ describe('Emitter', function() {
       expect(emitter._listeners.helloWorld[1]).to.be(genB);
     });
 
-    it('returns the co-listener', function() {
+    it('returns the co-listener', () => {
       var gen = function *() {};
       var result = emitter.on('helloWorld', gen);
       expect(result).to.be(emitter);
     });
   });
 
-  describe('once', function() {
+  describe('once', () => {
     it('attaches a listener and removes it', co.wrap(function*() {
       var emitter = new Emitter();
       var count = 0;
@@ -100,7 +101,7 @@ describe('Emitter', function() {
     it('works for functions', co.wrap(function*() {
       var emitter = new Emitter();
       var count = 0;
-      var listener = function(arg) { expect(arg).to.be('a'); count++; };
+      var listener = arg => { expect(arg).to.be('a'); count++; };
       emitter.once('test', listener);
       emitter.emit('test', 'a');
       emitter.emit('test');
@@ -108,20 +109,22 @@ describe('Emitter', function() {
     }));
   });
 
-  describe('emit', function() {
-    describe('with functions', function() {
-      it('emits the event on the listeners', function(done) {
+  describe('emit', () => {
+    describe('with functions', () => {
+      it('emits the event on the listeners', done => {
         var emitter = new Emitter();
-        emitter.on('test', function(val) {
+        emitter.on('test', val => {
           expect(val).to.be(1);
           done();
         });
         emitter.emit('test', 1);
       });
     });
-    describe('with generators', function() {
+    describe('with generators', () => {
       it('runs the listeners in the order registered', co.wrap(function *() {
-        var firstCalled = false, secondCalled = false, thirdCalled = false;
+        var firstCalled = false;
+        var secondCalled = false;
+        var thirdCalled = false;
         var first = function *() {
           expect(firstCalled).to.be(false);
           expect(secondCalled).to.be(false);
@@ -192,10 +195,12 @@ describe('Emitter', function() {
   });
 
 
-  describe('#off', function() {
-    var emitter, first, second;
+  describe('#off', () => {
+    var emitter;
+    var first;
+    var second;
 
-    beforeEach(function() {
+    beforeEach(() => {
       emitter = new Emitter();
       first = function *() {};
       second = function *() {};
@@ -203,19 +208,19 @@ describe('Emitter', function() {
       emitter.on('anotherTest', first);
     });
 
-    it('removes all listeners if no name provided', function() {
+    it('removes all listeners if no name provided', () => {
       emitter.off();
       expect(emitter._listeners).to.eql({});
       expect(emitter._styles.test).to.be(undefined);
     });
-    it('removes all listeners of name if name provided', function() {
+    it('removes all listeners of name if name provided', () => {
       emitter.off('test');
       expect(emitter._listeners).to.eql({
         anotherTest: [first]
       });
       expect(emitter._styles.test).to.be(undefined);
     });
-    it('removes specific listener if name and generator provided', function() {
+    it('removes specific listener if name and generator provided', () => {
       emitter.off('test', second);
       expect(emitter._listeners).to.eql({
         test: [first],
@@ -224,12 +229,12 @@ describe('Emitter', function() {
     });
   });
 
-  describe('#removeAllListeners', function() {
-    it('is a shortcut for off', function() {
-      var emitter = new Emitter(),
-          called = false;
+  describe('#removeAllListeners', () => {
+    it('is a shortcut for off', () => {
+      var emitter = new Emitter();
+      var called = false;
 
-      emitter.off = function() {
+      emitter.off = () => {
         called = true;
       };
       emitter.removeAllListeners();
@@ -237,36 +242,36 @@ describe('Emitter', function() {
     });
   });
 
-  describe('#hasListeners', function() {
-    it('returns true if there is a listener registered for the event name', function() {
+  describe('#hasListeners', () => {
+    it('returns true if there is a listener registered for the event name', () => {
       var emitter = new Emitter();
       emitter.on('test', function *() {});
       expect(emitter.hasListeners('test')).to.be(true);
     });
 
-    it('returns false if there is no listener registered for the event name', function() {
+    it('returns false if there is no listener registered for the event name', () => {
       var emitter = new Emitter();
       expect(emitter.hasListeners('test')).to.be(false);
     });
   });
 
-  describe('#listeners', function() {
-    it('returns all registered listeners for a event', function() {
+  describe('#listeners', () => {
+    it('returns all registered listeners for a event', () => {
       var emitter = new Emitter();
       var gen = function *() {};
       emitter.on('test', gen);
       expect(emitter.listeners('test')).to.be.eql([gen]);
     });
 
-    it('returns an empty array if no listeners', function() {
+    it('returns an empty array if no listeners', () => {
       var emitter = new Emitter();
       expect(emitter.listeners('test')).to.be.eql([]);
     });
   });
 
 
-  describe('mixin', function() {
-    it('works', function() {
+  describe('mixin', () => {
+    it('works', () => {
       var proto = {};
       Emitter(proto);
       expect(proto._listeners).to.be.an(Object);

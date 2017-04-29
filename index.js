@@ -30,11 +30,10 @@ function mixin(obj) {
  */
 
 Emitter.prototype.on = function() {
-  var args = Array.prototype.slice.call(arguments),
-      event = args.shift();
-
-  var listeners = this._listeners[event] || [],
-      add = function(listener) { this.on(event, listener); }.bind(this);
+  var args = Array.prototype.slice.call(arguments);
+  var event = args.shift();
+  var listeners = this._listeners[event] || [];
+  var add = listener => { this.on(event, listener); };
 
   this._listeners[event] = listeners;
 
@@ -43,9 +42,9 @@ Emitter.prototype.on = function() {
   } else if(args.length > 1) {
     args.forEach(add);
   } else {
-    var listener = args[0],
-        existingStyle = this._styles[event],
-        style = this._styles[event] = isGenerator(listener) ? 'generator' : 'function';
+    var listener = args[0];
+    var existingStyle = this._styles[event];
+    var style = this._styles[event] = isGenerator(listener) ? 'generator' : 'function';
 
     if(existingStyle && style !== existingStyle) {
       throw new Error('Cannot mix generator and function listeners');
@@ -67,7 +66,8 @@ Emitter.prototype.on = function() {
  */
 
 Emitter.prototype.once = function(event, listener) {
-  var self = this, remover;
+  var self = this;
+  var remover;
   if(isGenerator(listener)) {
     remover = function*() {
       var args = Array.prototype.slice.call(arguments);
@@ -95,10 +95,10 @@ Emitter.prototype.once = function(event, listener) {
  */
 
 Emitter.prototype.emit = function() {
-  var args = Array.prototype.slice.call(arguments),
-      event = args.shift(),
-      listeners = this.listeners(event),
-      style = this._styles[event];
+  var args = Array.prototype.slice.call(arguments);
+  var event = args.shift();
+  var listeners = this.listeners(event);
+  var style = this._styles[event];
 
   if(style == 'function') {
     for(var i = 0; i < listeners.length; ++i) {
